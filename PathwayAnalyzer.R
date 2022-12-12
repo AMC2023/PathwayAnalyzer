@@ -1,7 +1,3 @@
-#rm(list = ls())
-.libPaths("/acefs/R/3.6/")
-setwd("/data1/gogsally/")
-
 if(!require(shiny)) install.packages("shiny"); library(shiny)
 if(!require(shinydashboard)) install.packages("shinydashboard"); library(shinydashboard)
 if(!require(shinydashboardPlus)) install.packages("shinydashboardPlus"); library(shinydashboardPlus)
@@ -221,7 +217,7 @@ ui <- dashboardPage(
                                                   )))
                                   )),
                          
-                         tabPanel('ORIGINAL', icon = icon("project-diagram"),
+                         tabPanel('Pathway Analysis', icon = icon("project-diagram"),
                                   fluidRow(
                                     column(width = 12,
                                            column(width = 12,
