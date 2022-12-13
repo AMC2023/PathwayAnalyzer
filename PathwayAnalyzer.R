@@ -213,7 +213,7 @@ ui <- dashboardPage(
                                                              downloadButton("demo_sankeyNetwork_html", "Download"), br(), br(),
                                                              sankeyNetworkOutput("demo_sankeyNetwork", height = '1000px')),
                                                     tabPanel("Sunburst",
-                                                             sund2bOutput('demo_sunburst', height = '1000px')),
+                                                             sund2bOutput('demo_sunburst', height = '1000px'))
                                                   )))
                                   )),
                          
