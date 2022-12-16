@@ -20,6 +20,25 @@ if(!require(sunburstR)) install.packages("sunburstR"); library(sunburstR)
 if(!require(shinycssloaders)) install.packages("shinycssloaders"); library(shinycssloaders)
 if(!require(lubridate)) install.packages("lubridate"); library(lubridate)
 
+css <- "
+     #reverseSlider .irs-bar {
+        border-top: 1px solid #ddd;
+        border-bottom: 1px solid #ddd;
+        background: linear-gradient(to bottom, #DDD -50%, #FFF 150%); 
+      }
+    
+     #reverseSlider .irs-bar-edge {
+      border-top: 1px solid #ddd;
+      border-right: 0;
+      background: linear-gradient(to bottom, #DDD -50%, #FFF 150%); 
+    }
+    
+     #reverseSlider .irs-line {
+      border: 1px solid #428bca;
+      background: #428bca; 
+    }
+    "
+
 #UI----
 ui <- dashboardPage(
   header = dashboardHeader(
@@ -48,15 +67,15 @@ ui <- dashboardPage(
                                                              box(
                                                                textInput('text_dbname', "DB name", placeholder = 'db name'),
                                                                textInput('text_host', "Host", placeholder = 'host IP address'),
-                                                               textInput('text_user', "User", placeholder = 'user name'),
                                                                textInput('text_port', "Port", placeholder = 'port number'),
-                                                               textInput('text_password', "Password", placeholder = 'password number'), 
+                                                               textInput('text_user', "User", placeholder = 'user name'),
+                                                               passwordInput('text_password', "Password", placeholder = 'password number'), 
                                                                title = "DataBase Connect Information Input", solidHeader = TRUE, width = 6, status = "info"),
                                                              
                                                              box(
-                                                               textInput('text_cdmschema', "CDM Schema", placeholder = 'cdm schema name'),
-                                                               textInput('text_cohortschema', "Cohort Schema", placeholder = 'cohort schema name'),
-                                                               textInput('text_cohortdefinitionschema', "Cohort Definition Schema", placeholder = 'cohort definition schema name'),
+                                                               textInput('text_cdmschema', "CDM Schema", placeholder = "e.g., cdm (including 'cdm' Table)"),
+                                                               textInput('text_cohortschema', "Cohort Schema", placeholder = "e.g., results (including 'cohort' Table)"),
+                                                               textInput('text_cohortdefinitionschema', "Cohort Definition Schema", placeholder = "e.g., webapi (including 'cohort_definition' Table)"),
                                                                title = "DataBase Schema Information Input", solidHeader = TRUE, width = 6, status = "info")
                                                              
                                                       ),
@@ -104,9 +123,11 @@ ui <- dashboardPage(
                                                         
                                                         column(width = 12,
                                                                column(width = 6,
-                                                                      sliderInput("demo_slider_cohortStartDate_sqlRange_min", 
-                                                                                  "Drug Exposure Window [약물 사용 기간]", 
-                                                                                  min = -365, max = 0, value = -365)),
+                                                                      tags$style(type = 'text/css', css),
+                                                                      div(id = 'reverseSlider',
+                                                                          sliderInput("demo_slider_cohortStartDate_sqlRange_min", 
+                                                                                      "Drug Exposure Window [약물 사용 기간]", 
+                                                                                      min = -365, max = 0, value = -365))),
                                                                column(width = 6,
                                                                       sliderInput("demo_slider_cohortStartDate_sqlRange_max", 
                                                                                   "index date(0 day)", 
@@ -123,8 +144,9 @@ ui <- dashboardPage(
                                                   box(
                                                     title = "STEP 2 : Filter - ATC Drug Level (Scenario)", width = 12, status = "primary",
                                                     awesomeRadio(inputId = 'demo_radio_scenario', label = "",
-                                                                 choices = list("Scenario 1 : AS [L04, M01, A07EC]" = 1, 
-                                                                                "Scenario 2 : Afib [B01A]" = 2),
+                                                                 choices = list("Scenario 1 : Atrial fibrillation (ATC filter = [B01A])" = 1,
+                                                                                "Scenario 2 : Ankylosing spondylitis (ATC filter = [L04, M01, A07EC])" = 2),
+                                                                 selected = 1,
                                                                  status = "primary")
                                                   )
                                            )
@@ -150,7 +172,6 @@ ui <- dashboardPage(
                                                     box(
                                                       fluidRow(
                                                         column(width = 12,
-                                                               downloadButton("demo_drug_step2_csv", "Full CSV"), downloadButton("demo_pathway_DT_csv", "Pathway CSV"), br(), br(),
                                                                div(style = 'overflow-x: scroll;', DT::dataTableOutput("demo_pathway_DT")))), br(), br(), 
                                                       
                                                       box(
@@ -165,7 +186,7 @@ ui <- dashboardPage(
                                                           column(width = 12,
                                                                  column(width = 4,
                                                                         sliderInput("demo_slider_usedDrug_min", 
-                                                                                    "Min Drug Frequency(%) [최소 약물 빈도: 전체 환자 중 OO% 이상 사용된 약물만 포함]", 
+                                                                                    "Min Frequency of Drug(%) [최소 약물 사용 빈도: 전체 환자 중 OO% 이상 사용된 약물만 포함]", 
                                                                                     min = 0, max = 10, value = 0.5)),
                                                                  column(width = 4,
                                                                         sliderInput("demo_slider_step_max", 
@@ -174,13 +195,15 @@ ui <- dashboardPage(
                                                                  column(width = 4,
                                                                         sliderInput("demo_slider_link_min", 
                                                                                     "Min Number of Links [스텝 연결 빈도: 최소 OO개 이상인 경우만 포함]", 
-                                                                                    min = 1, max = 5, value = 1)))), br(),
+                                                                                    min = 1, max = 10, value = 5)))), br(),
                                                         fluidRow(
                                                           column(width = 12,
                                                                  column(width = 6,
-                                                                        sliderInput("demo_slider_cohortStartDate_quryRange_min", 
-                                                                                    "Drug Exposure Window [약물 사용 기간]", 
-                                                                                    min = -365, max = 0, value = -365)),
+                                                                        tags$style(type = 'text/css', css),
+                                                                        div(id = 'reverseSlider',
+                                                                            sliderInput("demo_slider_cohortStartDate_quryRange_min", 
+                                                                                        "Drug Exposure Window [약물 사용 기간]", 
+                                                                                        min = -365, max = 0, value = -365))),
                                                                  column(width = 6,
                                                                         sliderInput("demo_slider_cohortStartDate_quryRange_max", 
                                                                                     "index date(0 day)", 
@@ -210,8 +233,9 @@ ui <- dashboardPage(
                                                   tabBox(
                                                     id = 'dataset', width = 12,
                                                     tabPanel("SankeyNetwork", 
-                                                             downloadButton("demo_sankeyNetwork_html", "Download"), br(), br(),
+                                                             downloadButton("demo_sankeyNetwork_html", "Export"), br(), br(),
                                                              sankeyNetworkOutput("demo_sankeyNetwork", height = '1000px')),
+                                                    
                                                     tabPanel("Sunburst",
                                                              sund2bOutput('demo_sunburst', height = '1000px'))
                                                   )))
@@ -230,9 +254,11 @@ ui <- dashboardPage(
                                                         
                                                         column(width = 12,
                                                                column(width = 6,
-                                                                      sliderInput("slider_cohortStartDate_sqlRange_min", 
-                                                                                  "Drug Exposure Window [약물 사용 기간]", 
-                                                                                  min = -365, max = 0, value = -365)),
+                                                                      tags$style(type = 'text/css', css),
+                                                                      div(id = 'reverseSlider',
+                                                                          sliderInput("slider_cohortStartDate_sqlRange_min", 
+                                                                                      "Drug Exposure Window [약물 사용 기간]", 
+                                                                                      min = -365, max = 0, value = -365))),
                                                                column(width = 6,
                                                                       sliderInput("slider_cohortStartDate_sqlRange_max", 
                                                                                   "index date(0 day)", 
@@ -299,7 +325,6 @@ ui <- dashboardPage(
                                                     box(
                                                       fluidRow(
                                                         column(width = 12,
-                                                               downloadButton("drug_step2_csv", "Full CSV"), downloadButton("pathway_DT_csv", "pathway CSV"), br(), br(),
                                                                div(style = 'overflow-x: scroll;', DT::dataTableOutput("pathway_DT")))), br(), br(), 
                                                       
                                                       box(
@@ -314,7 +339,7 @@ ui <- dashboardPage(
                                                           column(width = 12,
                                                                  column(width = 4,
                                                                         sliderInput("slider_usedDrug_min", 
-                                                                                    "Min Drug Frequency(%) [최소 약물 빈도: 전체 환자 중 OO% 이상 사용된 약물만 포함]", 
+                                                                                    "Min Frequency of Drug(%) [최소 약물 사용 빈도: 전체 환자 중 OO% 이상 사용된 약물만 포함]", 
                                                                                     min = 0, max = 10, value = 0.5)),
                                                                  column(width = 4,
                                                                         sliderInput("slider_step_max", 
@@ -323,13 +348,15 @@ ui <- dashboardPage(
                                                                  column(width = 4,
                                                                         sliderInput("slider_link_min", 
                                                                                     "Min Number of Links [스텝 연결 빈도: 최소 OO개 이상인 경우만 포함]", 
-                                                                                    min = 1, max = 5, value = 1)))), br(),
+                                                                                    min = 1, max = 10, value = 5)))), br(),
                                                         fluidRow(
                                                           column(width = 12,
                                                                  column(width = 6,
-                                                                        sliderInput("slider_cohortStartDate_quryRange_min", 
-                                                                                    "Drug Exposure Window [약물 사용 기간]", 
-                                                                                    min = -365, max = 0, value = -365)),
+                                                                        tags$style(type = 'text/css', css),
+                                                                        div(id = 'reverseSlider',
+                                                                            sliderInput("slider_cohortStartDate_quryRange_min", 
+                                                                                        "Drug Exposure Window [약물 사용 기간]", 
+                                                                                        min = -365, max = 0, value = -365))),
                                                                  column(width = 6,
                                                                         sliderInput("slider_cohortStartDate_quryRange_max", 
                                                                                     "index date(0 day)", 
@@ -359,8 +386,9 @@ ui <- dashboardPage(
                                                   tabBox(
                                                     id = 'dataset', width = 12,
                                                     tabPanel("SankeyNetwork", 
-                                                             downloadButton("sankeyNetwork_html", "Download"), br(), br(),
+                                                             downloadButton("sankeyNetwork_html", "Export"), br(), br(),
                                                              sankeyNetworkOutput("sankeyNetwork", height = '1000px')),
+                                                    
                                                     tabPanel("Sunburst", 
                                                              sund2bOutput('sunburst', height = '1000px'))
                                                   )))
@@ -471,7 +499,6 @@ ui <- dashboardPage(
     #'          background-color: rgb(7, 125, 150);
     #'          border-radius: 0.9rem;
     #'          }
-    #'          
     #'          ')
     #'   )
     #' )
@@ -508,6 +535,7 @@ server <- function(input, output, session) {
       return(conn)
     })
     
+    dbDisconnect(conn)
     output$check_dbConnect <- renderPrint({
       print('Failure : Rewrite DataBase Connect Information')
     })
@@ -523,6 +551,7 @@ server <- function(input, output, session) {
       
       sql <- render(sql, cdmschema = input$text_cdmschema)
       concept <- dbGetQuery(conn, sql)
+      dbDisconnect(conn)
       
       output$check_cdmschema <- renderPrint({
         if(length(concept) > 0)
@@ -548,6 +577,7 @@ server <- function(input, output, session) {
       
       sql <- render(sql, cohortschema = input$text_cohortschema)
       cohort <- dbGetQuery(conn, sql)
+      dbDisconnect(conn)
       
       output$check_cohortschema <- renderPrint({
         if(length(cohort) > 0)
@@ -573,6 +603,7 @@ server <- function(input, output, session) {
       
       sql <- render(sql, cohortdefinitionschema = input$text_cohortdefinitionschema)
       cohort_definition <- dbGetQuery(conn, sql)
+      dbDisconnect(conn)
       
       output$check_cohortdefinitionschema <- renderPrint({
         if(length(cohort_definition) > 0)
@@ -592,13 +623,13 @@ server <- function(input, output, session) {
   output$demo_cohort_difinition_DT <- DT::renderDataTable(
     DT::datatable(
       button_cohort_difinition_DB(), selection = 'single',
-      filter = list(position = 'top', clear = FALSE), options = list(pageLength = 5)
+      filter = list(position = 'top', clear = FALSE), options = list(pageLength = 5, order = list(3, 'desc'))
     )
   )
   
   demo_drug_DB <- function() {
     cohort_difinition_selected <- cohort_difinition_DB()[input$demo_cohort_difinition_DT_rows_selected,]
-    cohort_difinition_selected <- subset(cohort_difinition_selected, select="id")
+    cohort_difinition_selected <- subset(cohort_difinition_selected, select="cohort_definition_id")
     
     conn <- DB_connect()
     
@@ -618,6 +649,7 @@ server <- function(input, output, session) {
                        before = input$demo_slider_cohortStartDate_sqlRange_min, 
                        after = input$demo_slider_cohortStartDate_sqlRange_max)
     drug <- dbGetQuery(conn, sql_drug) 
+    dbDisconnect(conn)
     
     saveRDS(drug,'./demo_drug.rds')
   }
@@ -683,10 +715,10 @@ server <- function(input, output, session) {
       drug <- readRDS("./demo_drug.rds")
       
       if(input$demo_radio_scenario == 1)
-        conceptCode_paste <- '^L04|^M01|^A07EC'
+        conceptCode_paste <- '^B01A'
       
       else if(input$demo_radio_scenario == 2)
-        conceptCode_paste <- '^B01A'
+        conceptCode_paste <- '^L04|^M01|^A07EC'
       
       conceptCode <- drug %>% filter(grepl(conceptCode_paste, concept_code, ignore.case = F))
       drugName <- unique(subset(conceptCode, select='drug_name'))
@@ -714,10 +746,10 @@ server <- function(input, output, session) {
       drug <- readRDS("./demo_drug.rds")
       
       if(input$demo_radio_scenario == 1)
-        conceptCode_paste <- '^L04|^M01|^A07EC'
+        conceptCode_paste <- '^B01A'
       
       else if(input$demo_radio_scenario == 2)
-        conceptCode_paste <- '^B01A'
+        conceptCode_paste <- '^L04|^M01|^A07EC'
       
       conceptCode <- drug %>% filter(grepl(conceptCode_paste, concept_code, ignore.case = F))
       drugName <- unique(subset(conceptCode, select='drug_name'))
@@ -758,11 +790,15 @@ server <- function(input, output, session) {
     if(length(input$demo_pathway_DT_rows_all) >= 1){
       drug <- readRDS("./demo_drug.rds")
       
-      if(input$demo_radio_scenario == 1)
-        conceptCode_paste <- '^L04|^M01|^A07EC'
-      
-      else if(input$demo_radio_scenario == 2)
+      if(input$demo_radio_scenario == 1){
         conceptCode_paste <- '^B01A'
+        title <- 'Scenario 1 : Atrial fibrillation (ATC filter = [B01A])'
+      }
+      
+      else if(input$demo_radio_scenario == 2){
+        conceptCode_paste <- '^L04|^M01|^A07EC'
+        title <- 'Scenario 2 : Ankylosing spondylitis (ATC filter = [L04, M01, A07EC])'
+      }
       
       conceptCode <- drug %>% filter(grepl(conceptCode_paste, concept_code, ignore.case = F))
       drugName <- unique(subset(conceptCode, select='drug_name'))
@@ -772,16 +808,19 @@ server <- function(input, output, session) {
       
       pwdata.drug <- conv_link(drug_step3, input$demo_slider_link_min)
       
-      return(sankeyNetwork(Links = pwdata.drug$link, Nodes = pwdata.drug$node, Source = "source",
-                           Target = "target", Value = "value", NodeID = "name",
-                           units = "건", fontSize = 15, nodeWidth = 30))
+      sankey <- sankeyNetwork(Links = pwdata.drug$link, Nodes = pwdata.drug$node, Source = "source",
+                              Target = "target", Value = "value", NodeID = "name",
+                              units = "건", fontSize = 15, nodeWidth = 30)
+      sankey <- htmlwidgets::prependContent(sankey, htmltools::tags$h1(title))
+      
+      return(sankey)
     }
   })
   
   output$cohort_difinition_DT <- DT::renderDataTable(
     DT::datatable(
       button_cohort_difinition_DB(), selection = 'single',
-      filter = list(position = 'top', clear = FALSE), options = list(pageLength = 5)
+      filter = list(position = 'top', clear = FALSE), options = list(pageLength = 5, order = list(3, 'desc')) 
     )
   )
   
@@ -797,12 +836,17 @@ server <- function(input, output, session) {
     try({
       conn <- DB_connect()
       
-      cohortQry <- "select *
-                    from @cohortdefinitionschema.cohort_definition;"
+      cohortQry <- "select cohort_definition_id, name, created_date, modified_date, count(subject_id) 
+                    from @cohortdefinitionschema.cohort_definition cd, @cohortschema.cohort ch 
+                    where cd.id = ch.cohort_definition_id 
+                    group by ch.cohort_definition_id, name, created_date, modified_date;"
       
-      cohortQry <- render(cohortQry, cohortdefinitionschema = input$text_cohortdefinitionschema)
+      cohortQry <- render(cohortQry, cohortdefinitionschema = input$text_cohortdefinitionschema,
+                          cohortschema = input$text_cohortschema)
       cohort_difinition <- unique(dbGetQuery(conn, cohortQry))
-      cohort_difinition <- cohort_difinition[,c('id', 'name', 'description', 'created_date', 'modified_date')]
+      dbDisconnect(conn)
+      cohort_difinition <- cohort_difinition[,c('cohort_definition_id', 'name', 'created_date', 'modified_date', 'count')]
+      colnames(cohort_difinition) <- c('cohort_definition_id', 'name', 'created_date', 'modified_date', 'subject_count')
       
       return(cohort_difinition)
     })
@@ -810,7 +854,7 @@ server <- function(input, output, session) {
   
   drug_DB <- function() {
     cohort_difinition_selected <- cohort_difinition_DB()[input$cohort_difinition_DT_rows_selected,]
-    cohort_difinition_selected <- subset(cohort_difinition_selected, select="id")
+    cohort_difinition_selected <- subset(cohort_difinition_selected, select="cohort_definition_id")
     
     conn <- DB_connect()
     
@@ -830,6 +874,7 @@ server <- function(input, output, session) {
                        before=input$slider_cohortStartDate_sqlRange_min, 
                        after=input$slider_cohortStartDate_sqlRange_max)
     drug <- dbGetQuery(conn, sql_drug) 
+    dbDisconnect(conn)
     
     saveRDS(drug,'./drug.rds')
   }
@@ -1087,7 +1132,7 @@ server <- function(input, output, session) {
     
     node <- data.frame(node_name=unique(c(link$s,link$t))) %>%
       mutate(node=seq(1,length(node_name))-1, name=gsub('_.*','',node_name))
-    node[node$node_name=='NA', 'name']<-'▷(continue)'
+    node[node$node_name=='NA', 'name'] <- '▷(continue)'
     
     link <- link %>% 
       merge(node, by.x='s',by.y='node_name',all.x=T) %>%
@@ -1124,36 +1169,26 @@ server <- function(input, output, session) {
     }
   })
   
-  downloadCsv <- function(name, data){
-    downloadHandler(
+  output$demo_sankeyNetwork_html <- downloadHandler(
       filename = function() {
-        paste(name, Sys.Date(), ".csv", sep = "")
-      }, 
-      content = function(file) {
-        write.csv(data, file)
-      }
-    )
-  }
-  
-  downloadHtml <- function(name, data){
-    downloadHandler(
-      filename = function() {
-        paste(name, Sys.Date(), ".html", sep = "")
+        paste("demo_sankeyNetwork_", Sys.Date(), ".html", sep = "")
       }, 
       
       content = function(file) {
-        saveNetwork(data, file)
+        saveNetwork(demo_sankeyNetwork_DB(), file)
       }
     )
-  }
-  
-  output$demo_drug_step2_csv <- downloadCsv("demo_full_", demo_drug_step2_DB())
-  output$demo_pathway_DT_csv <- downloadCsv("demo_pathway_", demo_pathway_DB())
-  output$drug_step2_csv <- downloadCsv("full_", drug_step2_DB())
-  output$pathway_DT_csv <- downloadCsv("pathway_", pathway_DB())
-  
-  output$demo_sankeyNetwork_html <- downloadHtml("demo_sankeyNetwork_", demo_sankeyNetwork_DB())
-  output$sankeyNetwork_html <- downloadHtml("sankeyNetwork_", sankeyNetwork_DB())
+	
+  output$sankeyNetwork_html <- downloadHandler(
+      filename = function() {
+        paste("sankeyNetwork_", Sys.Date(), ".html", sep = "")
+      }, 
+      
+      content = function(file) {
+        saveNetwork(sankeyNetwork_DB(), file)
+      }
+    )
+	
 }
 
 shinyApp(ui, server)
