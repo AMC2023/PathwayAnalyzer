@@ -1,3 +1,7 @@
+#rm(list = ls())
+.libPaths("/acefs/R/3.6/")
+setwd("/data1/gogsally/")
+
 if(!require(shiny)) install.packages("shiny"); library(shiny)
 if(!require(shinydashboard)) install.packages("shinydashboard"); library(shinydashboard)
 if(!require(shinydashboardPlus)) install.packages("shinydashboardPlus"); library(shinydashboardPlus)
@@ -811,6 +815,11 @@ server <- function(input, output, session) {
       sankey <- sankeyNetwork(Links = pwdata.drug$link, Nodes = pwdata.drug$node, Source = "source",
                               Target = "target", Value = "value", NodeID = "name",
                               units = "건", fontSize = 15, nodeWidth = 30)
+      
+      cohort_difinition_selected <- cohort_difinition_DB()[input$demo_cohort_difinition_DT_rows_selected,]
+      cohort_difinition_selected <- subset(cohort_difinition_selected, select="name")
+      
+      title <- paste(title, '-', cohort_difinition_selected)
       sankey <- htmlwidgets::prependContent(sankey, htmltools::tags$h1(title))
       
       return(sankey)
@@ -1163,32 +1172,39 @@ server <- function(input, output, session) {
       
       pwdata.drug <- conv_link(drug_step3, input$slider_link_min)
       
-      return(sankeyNetwork(Links = pwdata.drug$link, Nodes = pwdata.drug$node, Source = "source",
-                           Target = "target", Value = "value", NodeID = "name",
-                           units = "건", fontSize = 15, nodeWidth = 30))
+      sankey <- sankeyNetwork(Links = pwdata.drug$link, Nodes = pwdata.drug$node, Source = "source",
+                              Target = "target", Value = "value", NodeID = "name",
+                              units = "건", fontSize = 15, nodeWidth = 30)
+      
+      cohort_difinition_selected <- cohort_difinition_DB()[input$cohort_difinition_DT_rows_selected,]
+      cohort_difinition_selected <- subset(cohort_difinition_selected, select="name")
+      
+      sankey <- htmlwidgets::prependContent(sankey, htmltools::tags$h1(cohort_difinition_selected))
+      
+      return(sankey)
     }
   })
   
   output$demo_sankeyNetwork_html <- downloadHandler(
-      filename = function() {
-        paste("demo_sankeyNetwork_", Sys.Date(), ".html", sep = "")
-      }, 
-      
-      content = function(file) {
-        saveNetwork(demo_sankeyNetwork_DB(), file)
-      }
-    )
-	
+    filename = function() {
+      paste("demo_sankeyNetwork_", Sys.Date(), ".html", sep = "")
+    },
+    
+    content = function(file) {
+      saveNetwork(demo_sankeyNetwork_DB(), file)
+    }
+  )
+  
   output$sankeyNetwork_html <- downloadHandler(
-      filename = function() {
-        paste("sankeyNetwork_", Sys.Date(), ".html", sep = "")
-      }, 
-      
-      content = function(file) {
-        saveNetwork(sankeyNetwork_DB(), file)
-      }
-    )
-	
+    filename = function() {
+      paste("sankeyNetwork_", Sys.Date(), ".html", sep = "")
+    },
+    
+    content = function(file) {
+      saveNetwork(sankeyNetwork_DB(), file)
+    }
+  )
+  
 }
 
 shinyApp(ui, server)
